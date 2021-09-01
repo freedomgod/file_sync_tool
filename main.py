@@ -83,6 +83,8 @@ class add_rule_dialog(QtWidgets.QDialog):
             return False
         if not (os.path.exists(file_path) and os.path.exists(sync_path)):  # 路径有效性检查
             return False
+        elif os.path.isdir(file_path) == os.path.isfile(sync_path):
+            return False
         return True
 
     def accept(self) -> None:
@@ -98,7 +100,8 @@ class add_rule_dialog(QtWidgets.QDialog):
             })
             self.close()
         else:
-            QtWidgets.QMessageBox.warning(self, '警告', '请检查规则的合法性！\n1.规则名称不能为空；\n2.路径使用正斜杠。',
+            QtWidgets.QMessageBox.warning(self, '警告', '请检查规则的合法性！\n1.规则名称不能为空;\n2.路径使用正斜杠;'
+                                                      '\n3.两个路径须同为目录或文件',
                                           QtWidgets.QMessageBox.Yes)
 
 
@@ -256,6 +259,7 @@ class main_window(tool_window.Ui_MainWindow, QMainWindow):
         self.tree_model1.setRootPath(file_path)
         self.file1_treeView.setModel(self.tree_model1)
         self.file1_treeView.setRootIndex(self.tree_model1.index(file_path))
+
         self.tree_model2 = QtWidgets.QFileSystemModel()
         self.tree_model2.setRootPath(sync_path)
         self.file2_treeView.setModel(self.tree_model2)
@@ -285,12 +289,15 @@ class main_window(tool_window.Ui_MainWindow, QMainWindow):
                 res_file.append(file)
         return res_file
 
+    def global_filter(self):
+        pass
+
     def sync_file_slot(self):
         """
         同步文件
         :return:
         """
-        with open('rule.json', 'r') as fp:
+        with open('rule.json', 'r') as fp:  # 获取规则
             rules = json.load(fp)
         for i, rule in zip(range(len(rules)), rules):
             file_path = rule['file_path']
@@ -303,7 +310,11 @@ class main_window(tool_window.Ui_MainWindow, QMainWindow):
                     if os.path.exists(file2_path):
                         if os.stat(filepath).st_mtime > os.stat(file2_path).st_mtime:
                             shutil.copy2(filepath, file2_path)
-                            QtWidgets.QMessageBox.information(self, '提示', '文件同步完成!', QtWidgets.QMessageBox.Ok)
+                            # QtWidgets.QMessageBox.information(self, '提示', '文件同步完成!', QtWidgets.QMessageBox.Ok)
+            elif os.path.isfile(file_path):
+                if os.path.exists(sync_path) and (os.stat(file_path).st_mtime > os.stat(sync_path).st_mtime):
+                    shutil.copy2(file_path, sync_path)
+        QtWidgets.QMessageBox.information(self, '提示', '文件同步完成!', QtWidgets.QMessageBox.Ok)
 
     def totray_slot(self):
         """
@@ -313,6 +324,11 @@ class main_window(tool_window.Ui_MainWindow, QMainWindow):
         self.close()
 
     def closeEvent(self, event):
+        """
+        重写关闭事件
+        :param event: 点击关闭的信号
+        :return: None
+        """
         reply = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Question, self.tr("提示"),
                                       self.tr("你确定要退出吗？"), QtWidgets.QMessageBox.NoButton, self)
         yr_btn = reply.addButton(self.tr("退出"), QtWidgets.QMessageBox.YesRole)
