@@ -172,6 +172,7 @@ class main_window(tool_window.Ui_MainWindow, QMainWindow):
         self.sync_pushButton.clicked.connect(self.sync_file_slot)
 
         self.setWindowIcon(QtGui.QIcon('resources/文件-同步.png'))
+        self.undo_toolButton.setIcon(QtGui.QIcon('resources/撤销.png'))
 
         self.init_rule()
 
@@ -297,24 +298,57 @@ class main_window(tool_window.Ui_MainWindow, QMainWindow):
         同步文件
         :return:
         """
+        shutil.rmtree('./backup')  # 重新建立备份文件夹
+        os.mkdir('./backup')
         with open('rule.json', 'r') as fp:  # 获取规则
             rules = json.load(fp)
         for i, rule in zip(range(len(rules)), rules):
             file_path = rule['file_path']
             sync_path = rule['sync_path']
-            if os.path.isdir(file_path):
+            backup_path = f'./backup/rule{i + 1}_backup'  # 在同步文件之前做好备份
+            if os.path.isdir(sync_path):
+                shutil.copytree(sync_path, backup_path)  # 复制整个目录内容
+            else:
+                os.mkdir(backup_path)
+                shutil.copy2(sync_path, backup_path)
+            if os.path.isdir(file_path):  # 规则为一个路径
                 all_file = main_window.get_path_file(file_path, lv=1)
                 for ff in all_file:
                     filepath = os.path.join(file_path, ff)
                     file2_path = sync_path + '/' + ff
-                    if os.path.exists(file2_path):
-                        if os.stat(filepath).st_mtime > os.stat(file2_path).st_mtime:
+                    if os.path.exists(file2_path):  # 同步文件需要目标文件夹下已存在文件
+                        if os.stat(filepath).st_mtime > os.stat(file2_path).st_mtime:  # 要同步的文件最后修改时间应该要早于filepath的文件
                             shutil.copy2(filepath, file2_path)
                             # QtWidgets.QMessageBox.information(self, '提示', '文件同步完成!', QtWidgets.QMessageBox.Ok)
-            elif os.path.isfile(file_path):
+            elif os.path.isfile(file_path):  # 规则为同步单个文件
                 if os.path.exists(sync_path) and (os.stat(file_path).st_mtime > os.stat(sync_path).st_mtime):
                     shutil.copy2(file_path, sync_path)
         QtWidgets.QMessageBox.information(self, '提示', '文件同步完成!', QtWidgets.QMessageBox.Ok)
+
+    def undo_slot(self):
+        """
+        撤销同步操作，还原文件
+        :return:
+        """
+        with open('rule.json', 'r') as fp:  # 获取规则
+            rules = json.load(fp)
+        for i, rule in zip(range(len(rules)), rules):
+            file_path = rule['file_path']
+            sync_path = rule['sync_path']
+            backup_path = f'./backup/rule{i + 1}_backup'  # 在同步文件之前做好备份
+
+            if os.path.isdir(file_path):  # 规则为一个路径
+                all_file = main_window.get_path_file(file_path, lv=1)
+                for ff in all_file:
+                    filepath = os.path.join(file_path, ff)
+                    file2_path = sync_path + '/' + ff
+                    if os.path.exists(file2_path):  # 同步文件需要目标文件夹下已存在文件
+                        if os.stat(filepath).st_mtime > os.stat(file2_path).st_mtime:  # 要同步的文件最后修改时间应该要早于filepath的文件
+                            shutil.copy2(filepath, file2_path)
+                            # QtWidgets.QMessageBox.information(self, '提示', '文件同步完成!', QtWidgets.QMessageBox.Ok)
+            elif os.path.isfile(file_path):  # 规则为同步单个文件
+                if os.path.exists(sync_path) and (os.stat(file_path).st_mtime > os.stat(sync_path).st_mtime):
+                    shutil.copy2(file_path, sync_path)
 
     def totray_slot(self):
         """
