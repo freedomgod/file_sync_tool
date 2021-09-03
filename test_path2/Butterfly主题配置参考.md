@@ -10,7 +10,7 @@ comments: true
 abbrlink: configure-reference
 ---
 
-{% note info modern %}​(～￣▽￣)～持续更新ing{% endnote %}
+{% note info modern %}​(～￣▽￣)～持续更新ing{% endnote %}事实上
 
 ## 前言
 
