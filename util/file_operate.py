@@ -1,6 +1,7 @@
 import shutil
 import os
 import json
+import yaml
 
 
 operate_path = os.getcwd()
@@ -88,3 +89,24 @@ class file_handle:
                 if os.path.exists(orig_path):
                     if os.stat(backpath).st_mtime != os.stat(orig_path).st_mtime:
                         shutil.copy2(backpath, orig_path)
+
+
+class modify_file:
+    def __init__(self):
+        pass
+
+    def add_front_matter(self, file_path: str, data) -> bool:
+        """
+        为MarkDown文件添加front matter配置
+        :param file_path: md文件路径
+        :param data: 添加的front matter内容
+        :return: 布尔值，是否添加成功
+        """
+        if not os.path.exists(file_path):
+            return False
+        with open(file_path, 'r+', encoding='utf-8') as fp:
+            fp.write(data)
+
+
+if __name__ == '__main__':
+    modify_file().add_front_matter('test.md', '---\ntitle: dd\n---')

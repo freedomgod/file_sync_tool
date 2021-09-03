@@ -1,0 +1,17 @@
+user: feiyu1009
+password: 123456
+
+urls:
+ baid: http://www.baidu.com
+ google: http://gooogle.com
+
+name: Tom Smith
+age: 37
+spouse:
+    name: Jane Smith
+    age: 25
+children:
+ - name: Jimmy Smith
+   age: 15
+ - name1: Jenny Smith
+   age1: 12

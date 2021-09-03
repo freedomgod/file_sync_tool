@@ -2,7 +2,6 @@ from GUI import tool_window, add_rule_window
 import os
 import sys
 import json
-import shutil
 from util.file_operate import file_handle
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
