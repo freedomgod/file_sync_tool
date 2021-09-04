@@ -1,6 +1,7 @@
 import shutil
 import os
 import json
+import re
 import yaml
 
 
@@ -99,14 +100,34 @@ class modify_file:
         """
         为MarkDown文件添加front matter配置
         :param file_path: md文件路径
-        :param data: 添加的front matter内容
+        :param data: 添加的front matter内容，可以为字符串、字典
         :return: 布尔值，是否添加成功
         """
-        if not os.path.exists(file_path):
-            return False
-        with open(file_path, 'r+', encoding='utf-8') as fp:
-            fp.write(data)
+        if not os.path.exists(file_path):  # 文件不存在则抛出错误
+            raise FileNotFoundError
+        data_str = ''
+        pt = re.compile('---([\s\S]*)---')
+        if type(data) == str:  # 判断data的类型
+            if not pt.match(data):
+                data_str = '---\n' + data + '\n---\n'
+            else:
+                data_str = data + '\n'
+        elif type(data) == dict:
+            for k, v in data.items():
+                data_str += str(k) + ': ' + str(v) + '\n'
+            data_str = '---\n' + data_str + '---\n'
+        with open(file_path, 'r', encoding='utf-8') as fp:
+            content = fp.read()  # 读取文件内容
+        with open(file_path, 'w') as ff:
+            res = pt.match(content)
+            if res:  # 判断原文件内容是否有front matter内容
+                return False
+            content = data_str + content
+            ff.write(content)
+            return True
 
 
 if __name__ == '__main__':
-    modify_file().add_front_matter('test.md', '---\ntitle: dd\n---')
+    dt = {'title': 'w w h', 'ds': 'sd'}
+    modify_file().add_front_matter('test.md', dt)
+    # modify_file().add_front_matter('test.md', 'title: dd')
