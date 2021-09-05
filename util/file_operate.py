@@ -2,7 +2,7 @@ import shutil
 import os
 import json
 import re
-import yaml
+
 
 
 operate_path = os.getcwd()
